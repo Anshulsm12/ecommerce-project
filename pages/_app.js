@@ -1,15 +1,15 @@
-// pages/_app.js
+import { Provider } from 'react-redux';
+import { PersistGate } from 'redux-persist/integration/react';
+import { store, persistor } from '../store/store';
 import '../styles/globals.css';
-import { AnimatePresence } from 'framer-motion';
-import Layout from '../components/Layout';
 
-function MyApp({ Component, pageProps, router }) {
+function MyApp({ Component, pageProps }) {
   return (
-    <Layout>
-      <AnimatePresence mode="wait">
-        <Component {...pageProps} key={router.route} />
-      </AnimatePresence>
-    </Layout>
+    <Provider store={store}>
+      <PersistGate loading={null} persistor={persistor}>
+        <Component {...pageProps} />
+      </PersistGate>
+    </Provider>
   );
 }
 

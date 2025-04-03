@@ -2,40 +2,77 @@ import { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import ProductList from '../components/ProductList';
 import CategoryFilter from '../components/CategoryFilter';
+import ProductSkeleton from '../components/ProductSkeleton';
+import ErrorDisplay from '../components/ErrorDisplay';
 
 export default function Home() {
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  // Use state to store the initial timestamp
+  const [lastUpdate] = useState(() => {
+    // Format the date consistently
+    const now = new Date();
+    return now.toLocaleString('en-US', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true
+    });
+  });
 
-  // Safely extract categories only when products are available
-  const categories = products?.length 
-    ? ['All', ...new Set(products.map(product => product.category))] 
-    : ['All'];
-
-  // Fetch products on initial load
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        setIsLoading(true);
-        const response = await fetch('https://fakestoreapi.com/products');
-        const data = await response.json();
-        setProducts(data);
-        setFilteredProducts(data);
-        setIsLoading(false);
-      } catch (error) {
-        console.error('Error fetching products:', error);
-        setIsLoading(false);
+  const fetchProducts = async (pageNum) => {
+    try {
+      setError(null);
+      setIsLoading(true);
+      const response = await fetch(
+        `https://fakestoreapi.com/products?limit=10&page=${pageNum}`
+      );
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch products');
       }
-    };
 
-    fetchProducts();
+      const data = await response.json();
+      
+      setProducts(prev => pageNum === 1 ? data : [...prev, ...data]);
+      setFilteredProducts(prev => {
+        const newProducts = pageNum === 1 ? data : [...prev, ...data];
+        return selectedCategory === 'All' 
+          ? newProducts 
+          : newProducts.filter(product => product.category === selectedCategory);
+      });
+      
+      setHasMore(data.length === 10);
+    } catch (error) {
+      setError('Failed to load products. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProducts(1);
   }, []);
 
-  // Handle category filter
+  const loadMore = () => {
+    if (!isLoading && hasMore) {
+      const nextPage = page + 1;
+      setPage(nextPage);
+      fetchProducts(nextPage);
+    }
+  };
+
   const handleCategorySelect = (category) => {
     setSelectedCategory(category);
+    setPage(1);
     
     if (category === 'All') {
       setFilteredProducts(products);
@@ -49,23 +86,43 @@ export default function Home() {
   return (
     <Layout>
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-8">Shop Our Products</h1>
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold">Shop Our Products</h1>
+          <span className="text-sm text-gray-500">
+            Last updated: {lastUpdate}
+          </span>
+        </div>
         
-        {isLoading ? (
-          <div className="flex justify-center items-center h-64">
-            <p className="text-xl">Loading products...</p>
-          </div>
+        {error ? (
+          <ErrorDisplay 
+            message={error}
+            onRetry={() => fetchProducts(page)}
+          />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div className="md:col-span-1">
               <CategoryFilter 
-                categories={categories}
+                categories={products?.length 
+                  ? ['All', ...new Set(products.map(product => product.category))] 
+                  : ['All']}
                 selectedCategory={selectedCategory}
                 onSelectCategory={handleCategorySelect}
               />
             </div>
             <div className="md:col-span-3">
-              <ProductList products={filteredProducts} />
+              <ProductList 
+                products={filteredProducts}
+                onLoadMore={loadMore}
+                hasMore={hasMore}
+              />
+              
+              {isLoading && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+                  {[...Array(6)].map((_, index) => (
+                    <ProductSkeleton key={index} />
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}
