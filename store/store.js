@@ -1,44 +1,33 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { configureStore } from '@reduxjs/toolkit';
+import productReducer from './productSlice';
+import cartReducer from './cartSlice';
+import storage from 'redux-persist/lib/storage';
+import { persistReducer, persistStore } from 'redux-persist';
 
-export const useStore = create(
-  persist(
-    (set) => ({
-      cart: [],
-      addToCart: (product) => 
-        set((state) => {
-          const existingItem = state.cart.find(item => item.id === product.id);
-          
-          if (existingItem) {
-            return {
-              cart: state.cart.map(item => 
-                item.id === product.id 
-                  ? {...item, quantity: item.quantity + 1} 
-                  : item
-              )
-            };
-          } else {
-            return {
-              cart: [...state.cart, {...product, quantity: 1}]
-            };
-          }
-        }),
-      removeFromCart: (productId) => 
-        set((state) => ({
-          cart: state.cart.filter(item => item.id !== productId)
-        })),
-      updateQuantity: (productId, quantity) => 
-        set((state) => ({
-          cart: state.cart.map(item => 
-            item.id === productId 
-              ? {...item, quantity} 
-              : item
-          )
-        })),
-      clearCart: () => set({ cart: [] }),
+// Configure persist options for cart
+const cartPersistConfig = {
+  key: 'cart',
+  storage,
+  whitelist: ['items']
+};
+
+// Create persisted cart reducer
+const persistedCartReducer = persistReducer(cartPersistConfig, cartReducer);
+
+// Configure store
+export const store = configureStore({
+  reducer: {
+    products: productReducer,
+    cart: persistedCartReducer,
+  },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: {
+        ignoredActions: ['persist/PERSIST', 'persist/REHYDRATE'],
+      },
     }),
-    {
-      name: 'cart-storage',
-    }
-  )
-);
+  devTools: process.env.NODE_ENV !== 'production',
+});
+
+// Create persisted store
+export const persistor = persistStore(store);
