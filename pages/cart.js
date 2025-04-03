@@ -1,4 +1,3 @@
-// pages/cart.js (Cart Page)
 import { useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
@@ -9,7 +8,6 @@ import CartItem from '../components/CartItem';
 export default function Cart() {
   const { cart, clearCart, getCartTotal } = useStore();
   
-  // Calculate totals
   const subtotal = getCartTotal();
   const shipping = cart.length > 0 ? 10 : 0;
   const discount = subtotal > 100 ? subtotal * 0.1 : 0; // 10% discount if subtotal is over $100
