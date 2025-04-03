@@ -3,21 +3,18 @@ import { useSelector } from 'react-redux'; // Changed from useStore
 import Link from 'next/link';
 
 export default function Layout({ children }) {
-  // Use useSelector instead of useStore
+  
   const cart = useSelector((state) => state.cart.items);
   const [theme, setTheme] = useState('light');
 
-  // Calculate total items in cart
   const cartItemsTotal = cart?.reduce((total, item) => total + item.quantity, 0) || 0;
 
-  // Theme toggle handler
   const toggleTheme = () => {
     const newTheme = theme === 'light' ? 'dark' : 'light';
     setTheme(newTheme);
     document.documentElement.classList.toggle('dark');
   };
 
-  // Set initial theme
   useEffect(() => {
     if (typeof window !== 'undefined') {
       document.documentElement.classList.toggle('dark', theme === 'dark');
