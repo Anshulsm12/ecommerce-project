@@ -2,7 +2,6 @@
 
 A modern e-commerce platform built with Next.js, Redux Toolkit, and Tailwind CSS.
 
-## Last Updated: 2025-04-03 06:29:48 UTC
 ## Maintained by: [Anshulsm12](https://github.com/Anshulsm12)
 
 ## 🚀 Quick Start
