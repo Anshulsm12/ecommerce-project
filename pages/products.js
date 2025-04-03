@@ -1,4 +1,3 @@
-// pages/products/[id].js (Product Detail Page)
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
@@ -17,7 +16,6 @@ export default function ProductDetail() {
   const [zoomPosition, setZoomPosition] = useState({ x: 0, y: 0 });
   const [showZoom, setShowZoom] = useState(false);
 
-  // Fetch product data
   useEffect(() => {
     if (!products.length) {
       fetchProducts();
@@ -30,7 +28,6 @@ export default function ProductDetail() {
     }
   }, [id, products, fetchProducts]);
   
-  // Handle mouse move for zoom effect
   const handleMouseMove = (e) => {
     if (!showZoom) return;
     
@@ -41,19 +38,16 @@ export default function ProductDetail() {
     setZoomPosition({ x, y });
   };
   
-  // Mock multiple images (since the API only provides one)
   const getProductImages = () => {
     if (!product) return [];
     return [
       product.image,
-      // Additional images would be here in a real application
       `${product.image}?v=2`,
       `${product.image}?v=3`,
       `${product.image}?v=4`,
     ];
   };
   
-  // Add to cart with selected quantity
   const handleAddToCart = () => {
     if (product) {
       for (let i = 0; i < quantity; i++) {
@@ -62,7 +56,6 @@ export default function ProductDetail() {
     }
   };
   
-  // Loading state
   if (isLoading || !product) {
     return (
       <div className="flex justify-center items-center h-96">
